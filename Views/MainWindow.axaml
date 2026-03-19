@@ -1,0 +1,143 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:views="using:GraphicalFileHasher.Views"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:DataType="views:MainWindow"
+        Width="1000"
+        Height="650"
+        CanResize="False"
+        x:Class="GraphicalFileHasher.Views.MainWindow"
+        Title="GraphicalFileHasher"
+>
+        
+    <Border 
+            BorderThickness="2"
+            CornerRadius="40"
+            Padding="30"
+            Margin="20"
+            BoxShadow="0 5 15 0 #40000000"               
+    >
+    
+        <!-- main container which will contain all the user interface in 3 rows -->
+        <Grid
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            RowDefinitions="1* 6* 1* 1*"
+        >
+			
+            <!-- path and settings flags -->
+            <Grid
+                Grid.Row="0"
+                HorizontalAlignment="Stretch"
+                ColumnDefinitions="3* 1* 1*"
+                ColumnSpacing="30"
+            >
+                <TextBox
+                  Grid.Column="0"
+                  Watermark="Path"
+                  UseFloatingWatermark="True"
+                  Name="PathInput"
+                  VerticalAlignment="Center"
+                  HorizontalAlignment="Stretch"
+                />
+
+				<CheckBox
+                    Grid.Column="1"
+                    Name="RecursiveInput"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                >
+                    Recursive
+                </CheckBox>
+
+                <Button
+                    Grid.Column="2"
+                    Name="AddInput"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Click="AddPaths"
+                >
+                    Add
+                </Button>
+
+            </Grid>
+
+            <!-- files summary -->
+            <Grid
+                Grid.Row="1"
+                HorizontalAlignment="Stretch"
+                Margin="0 20 0 20"
+            >
+				<ListBox
+                    Background="LightGray"
+                    Name="Files"
+                    ItemsSource="{Binding Paths}"
+                >
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                          <Grid ColumnDefinitions="Auto, *" Margin="5">
+                            <PathIcon Data="{StaticResource file_regular}" Grid.Column= "0" Margin="0,0,10,0"/>
+        
+                            <StackPanel Grid.Column="1">
+                              <TextBlock Text="{Binding Path}" FontSize="14" />
+                              <TextBlock Text="{Binding Hash}" 
+                                         FontSize="11" 
+                                         Foreground="CadetBlue" 
+                                         FontFamily="Consolas" />
+                            </StackPanel>
+                          </Grid>
+                        </DataTemplate>
+                      </ListBox.ItemTemplate>
+                </ListBox>
+
+            </Grid>
+
+            <!-- start and progress bar -->
+            <Grid
+                Grid.Row="2"
+                HorizontalAlignment="Stretch"
+                ColumnSpacing="30"
+                ColumnDefinitions="5* 1* 1*"
+            >
+				<ProgressBar
+                    Name="HashingProgressBar"
+                    Height="20"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Stretch"
+                    ShowProgressText="True"
+                    Value="{Binding HashService.Results.FinishedFilesCounter, Mode=OneWay}"
+                    Minimum="0"
+                    Maximum="{Binding Paths.Count}"
+                    Grid.Column="0"
+                />
+
+                <Button
+                    Name="StartButton"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Grid.Column="1"
+                    Click="StartHashing"
+                >
+                    Start
+                </Button>
+
+                <Button
+                    Name="DeleteButton"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Grid.Column="2"
+                    Click="DeleteDuplicates"
+                >
+                    Delete
+                </Button>
+            </Grid>
+
+            <TextBlock Grid.Row="4" Name="DebugText">Welcome to GraphicalFileHasher!</TextBlock>
+
+        </Grid>
+
+  </Border>
+
+</Window>
