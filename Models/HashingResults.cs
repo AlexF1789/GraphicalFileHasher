@@ -1,8 +1,10 @@
 ﻿using GraphicalFileHasher.Services;
 using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using GraphicalFileHasher.Exceptions;
 
 namespace GraphicalFileHasher.Models;
 
@@ -80,5 +82,27 @@ public class HashingResults(HashService hashService) : INotifyPropertyChanged
         }
 
         return results;
+    }
+
+    public void WriteResultsOnStreamWriter(StreamWriter streamWriter)
+    {
+        // let's check if the results are computed
+        if (!AreResultsComputed())
+        {
+            throw new NotExaminedException();
+        }
+        
+        // for each hash let's add it to the file
+        foreach (var element in HashToFile)
+        {
+            streamWriter.WriteLine("# ----------------------");
+            streamWriter.WriteLine($"hash: {element.Key}");
+            foreach (var file in element.Value)
+            {
+                streamWriter.WriteLine($"file: {file}");
+            }
+            
+            streamWriter.WriteLine("# ----------------------");
+        }
     }
 }
