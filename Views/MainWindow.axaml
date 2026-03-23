@@ -10,14 +10,17 @@
         CanResize="False"
         x:Class="GraphicalFileHasher.Views.MainWindow"
         Title="GraphicalFileHasher"
+        Background="AliceBlue"
+        Icon="avares://GraphicalFileHasher/Assets/icon.ico"
 >
         
     <Border 
-            BorderThickness="2"
-            CornerRadius="40"
-            Padding="30"
-            Margin="20"
-            BoxShadow="0 5 15 0 #40000000"               
+        BorderThickness="2"
+        CornerRadius="40"
+        Padding="30"
+        Margin="20"
+        BoxShadow="0 5 15 0 #40000000"
+        Background="White"
     >
     
         <!-- main container which will contain all the user interface in 3 rows -->
@@ -107,7 +110,7 @@
                     VerticalAlignment="Center"
                     HorizontalAlignment="Stretch"
                     ShowProgressText="True"
-                    Value="{Binding HashService.Results.FinishedFilesCounter, Mode=OneWay}"
+                    Value="{Binding HashService.Results.FinishedFilesCounter}"
                     Minimum="0"
                     Maximum="{Binding Paths.Count}"
                     Grid.Column="0"
@@ -134,7 +137,7 @@
                 </Button>
             </Grid>
 
-            <TextBlock Grid.Row="4" Name="DebugText">Welcome to GraphicalFileHasher!</TextBlock>
+            <TextBlock Grid.Row="3" Name="DebugText">Welcome to GraphicalFileHasher!</TextBlock>
 
         </Grid>
 

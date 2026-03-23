@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Humanizer;
+using MsBox.Avalonia;
 
 namespace GraphicalFileHasher.Services;
 
@@ -15,7 +16,7 @@ public class HashService
     public HashingResults Results { get; private set; }
     public SystemConfig Config { get; init; }
 
-    private readonly ParallelOptions ParallelOptions;
+    private readonly ParallelOptions _parallelOptions;
 
     public bool RedundantDeleted { get; private set; } = false;
 
@@ -24,12 +25,12 @@ public class HashService
         Files = files;
         Results = new HashingResults(this);
         Config = new SystemConfig(processorCount, deleteFiles);
-        ParallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Config.ProcessorNumber };
+        _parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = Config.ProcessorNumber };
     }
 
     public async Task StartCalculation()
     {
-        await Parallel.ForEachAsync(Files, ParallelOptions, async (item, token) =>
+        await Parallel.ForEachAsync(Files, _parallelOptions, async (item, token) =>
         {
             await Results.AddToHashedFiles(item);
             await Results.IncrementFinishedFiles();
@@ -40,7 +41,10 @@ public class HashService
     {
         CheckResultsCompleted();
 
-        await Parallel.ForEachAsync(Results.HashToFile, ParallelOptions, async (item, token) =>
+        if (RedundantDeleted)
+            throw new AlreadyDeletedException();
+        
+        await Parallel.ForEachAsync(Results.HashToFile, _parallelOptions, (item, token) =>
         {
             // let's check if the hash is linked to more than a file
             if (item.Value.Count > 1)
@@ -49,11 +53,15 @@ public class HashService
                 item.Value
                     .Skip(1)
                     .ToList()
-                    .ForEach(path => File.Delete(path));
+                    .ForEach(File.Delete);
             }
+
+            return default;
         });
 
+        // let's mark the redundant files as deleted and generate the log file
         RedundantDeleted = true;
+        GenerateFileSummary();
     }
 
     /// <summary>

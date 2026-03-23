@@ -4,13 +4,13 @@ using System.ComponentModel;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using GraphicalFileHasher.Exceptions;
 
 namespace GraphicalFileHasher.Models;
 
 public class HashingResults(HashService hashService) : INotifyPropertyChanged
 {
-    public HashService HashService = hashService;
     public ConcurrentDictionary<string, ConcurrentBag<string>> HashToFile { get; } = new();
     private int _finishedFilesCounter = 0;
     public int FinishedFilesCounter
@@ -19,10 +19,14 @@ public class HashingResults(HashService hashService) : INotifyPropertyChanged
         set
         {
             _finishedFilesCounter = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FinishedFilesCounter)));
+            Dispatcher.UIThread.Post(() =>
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FinishedFilesCounter))); 
+            });
         }
     }
-    private readonly SemaphoreSlim CounterSemaphore = new(1, 1);
+    
+    private readonly SemaphoreSlim _counterSemaphore = new(1, 1);
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
@@ -33,7 +37,7 @@ public class HashingResults(HashService hashService) : INotifyPropertyChanged
     public async Task IncrementFinishedFiles()
     {
         // let's wait for the semaphore to access the counter
-        await CounterSemaphore.WaitAsync();
+        await _counterSemaphore.WaitAsync();
 
         try
         {
@@ -41,7 +45,7 @@ public class HashingResults(HashService hashService) : INotifyPropertyChanged
         }
         finally
         {
-            CounterSemaphore.Release();
+            _counterSemaphore.Release();
         }
     }
 

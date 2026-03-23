@@ -21,8 +21,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        DataContext = this;
         HashService = new(Paths, null, false);
+        DataContext = this;
     }
 
     public void AddPaths(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -97,7 +97,16 @@ public partial class MainWindow : Window
         await HashService.StartCalculation();
         TimeSpan timeInterval = DateTime.Now - startingTime;
 
-        UpdateDebugMessage($"Hashed {Paths.Count} files in {timeInterval.Humanize(precision: 2)} using {HashService.Config.ProcessorNumber} CPUs");
+        var result = HashService.GetNumberOfDuplicates();
+
+        UpdateDebugMessage($"Hashed {Paths.Count} files in {timeInterval.Humanize(precision: 2)} using {HashService.Config.ProcessorNumber} CPUs - found {result.DuplicatedFiles} duplicates and {result.RedundantFiles} redundant files");
+
+        await MessageBoxManager.GetMessageBoxStandard(
+            "Hashing complete",
+            $"Hashed {Paths.Count} files in {timeInterval.Humanize(precision: 2)} using {HashService.Config.ProcessorNumber} CPUs - found {result.DuplicatedFiles} duplicates and {result.RedundantFiles} redundant files",
+            ButtonEnum.Ok,
+            MsBox.Avalonia.Enums.Icon.Success
+        ).ShowAsync();
     }
 
     private async void DeleteDuplicates(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -126,13 +135,34 @@ public partial class MainWindow : Window
 
             if(result == ButtonResult.Yes)
             {
-                await HashService.DeleteDuplicates();
-                await MessageBoxManager.GetMessageBoxStandard(
-                    "Duplicated files deleted",
-                    "The duplicated files were succesfully deleted!",
-                    ButtonEnum.Ok,
-                    MsBox.Avalonia.Enums.Icon.Info
-                ).ShowAsync();
+                try
+                {
+                    await HashService.DeleteDuplicates();
+                    await MessageBoxManager.GetMessageBoxStandard(
+                        "Duplicated files deleted",
+                        "The duplicated files were succesfully deleted!",
+                        ButtonEnum.Ok,
+                        MsBox.Avalonia.Enums.Icon.Info
+                    ).ShowAsync();
+                }
+                catch (AlreadyDeletedException _)
+                {
+                    await MessageBoxManager.GetMessageBoxStandard(
+                        "Already deleted",
+                        "The duplicate files have already been deleted so there's no need to do so again",
+                        ButtonEnum.Ok,
+                        MsBox.Avalonia.Enums.Icon.Error
+                    ).ShowAsync();
+                }
+                catch (Exception _)
+                {
+                    await MessageBoxManager.GetMessageBoxStandard(
+                        "Unknown error",
+                        "An unknown error occurred, please try again and consider backing up files",
+                        ButtonEnum.Ok,
+                        MsBox.Avalonia.Enums.Icon.Error
+                    ).ShowAsync();
+                }
             } 
             else
             {
